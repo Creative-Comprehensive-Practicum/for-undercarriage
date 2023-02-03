@@ -45,7 +45,7 @@ enum class PIN {
   analog5 = A5,
 };
 
-  constexpr uint16_t analog_thresholds[4] = {3000, 10000, 8000, 10000};
+  constexpr uint16_t analog_thresholds[4] = {1023, 9000, 6000, 10000};
   constexpr uint8_t weights[4] = {2, 1, -1, -2};
 
   constexpr uint8_t analog_pins[4] = {
@@ -62,7 +62,7 @@ namespace globals {
 
   uint16_t analog_input[4] = {0, 0, 0, 0};
 
-  pair<uint8_t, uint8_t> wheel_spd(200, 200);
+  pair<int16_t, int16_t> wheel_spd(0, 0);
 }
 
 void analog_reader(void);
@@ -117,9 +117,11 @@ void timer_inturrepts10(void) {
     globals::wheel_spd.first() += constants::weights[i] * analog_is_white[i];
     globals::wheel_spd.second() += - constants::weights[i] * analog_is_white[i];
   }
+  if(abs(globals::wheel_spd.first()) > 2750) globals::wheel_spd.first() = (globals::wheel_spd.first() > 0) ? 2750: -2750;
+  if(abs(globals::wheel_spd.second()) > 2750) globals::wheel_spd.second() = (globals::wheel_spd.second() > 0) ? 2750: -2750;
 
-  analogWrite(static_cast<int>(constants::PIN::PWM1), globals::wheel_spd.first());
-  analogWrite(static_cast<int>(constants::PIN::PWM3), globals::wheel_spd.second());
+  analogWrite(static_cast<int>(constants::PIN::PWM1), 200 + globals::wheel_spd.first()/50);
+  analogWrite(static_cast<int>(constants::PIN::PWM3), 200 + globals::wheel_spd.second()/50);
   
   globals::loop_counter = 0;
 
